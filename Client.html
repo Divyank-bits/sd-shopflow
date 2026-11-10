@@ -65,9 +65,22 @@ function shareButtons(no) {
 }
 document.addEventListener('click', function (e) {
   var d = e.target.dataset;
+  // invoices
   if (d.mail) run('emailInvoice', d.mail).then(toast);
   if (d.wa) run('whatsappLink', d.wa).then(function (u) { window.open(u, '_blank'); });
   if (d.cancel && confirm('Cancel ' + d.cancel + '? Stock will be restored.')) run('cancelInvoice', d.cancel).then(function () { toast('Cancelled'); loadInvoices(); loadAll(); });
+  // products
+  if (d.pe) {
+    var p = state.products.filter(function (x) { return x.id === d.pe; })[0];
+    if (p) { $('pId').value = p.id; $('pName').value = p.name; $('pHsn').value = p.hsn || ''; $('pUnit').value = p.unit || ''; $('pPrice').value = p.price; $('pGst').value = p.gst; $('pStock').value = p.stock; $('pLow').value = p.lowStock || ''; }
+  }
+  if (d.pd && confirm('Delete product?')) run('deleteRecord', 'Products', d.pd).then(loadAll);
+  // customers
+  if (d.ce) {
+    var c = state.customers.filter(function (x) { return x.id === d.ce; })[0];
+    if (c) { $('cId').value = c.id; $('cName').value = c.name; $('cGstin').value = c.gstin || ''; $('cState').value = c.state || ''; $('cPhone').value = c.phone || ''; $('cEmail').value = c.email || ''; $('cAddr').value = c.address || ''; }
+  }
+  if (d.cd && confirm('Delete customer?')) run('deleteRecord', 'Customers', d.cd).then(loadAll);
 });
 
 // ---- invoices
@@ -88,12 +101,6 @@ function renderProducts() {
     return '<tr><td>' + esc(p.name) + '</td><td>' + esc(p.hsn) + '</td><td class="r">' + p.price + '</td><td class="r">' + p.gst + '</td><td class="r">' + p.stock + '</td><td><button class="small" data-pe="' + p.id + '">Edit</button> <button class="small" data-pd="' + p.id + '">Delete</button></td></tr>';
   }).join('');
 }
-$('prodTable').addEventListener('click', function (e) {
-  var d = e.target.dataset;
-  if (d.pe) { var p = state.products.filter(function (x) { return x.id === d.pe; })[0];
-    $('pId').value = p.id; $('pName').value = p.name; $('pHsn').value = p.hsn; $('pUnit').value = p.unit; $('pPrice').value = p.price; $('pGst').value = p.gst; $('pStock').value = p.stock; $('pLow').value = p.lowStock; }
-  if (d.pd && confirm('Delete product?')) run('deleteRecord', 'Products', d.pd).then(loadAll);
-});
 $('saveProduct').onclick = function () {
   run('saveProduct', { id: val('pId'), name: val('pName'), hsn: val('pHsn'), unit: val('pUnit') || 'pcs', price: val('pPrice'), gst: val('pGst'), stock: val('pStock'), lowStock: val('pLow') })
     .then(function () { ['pId', 'pName', 'pHsn', 'pUnit', 'pPrice', 'pGst', 'pStock', 'pLow'].forEach(function (i) { $(i).value = ''; }); toast('Saved'); return loadAll(); });
@@ -105,12 +112,6 @@ function renderCustomers() {
     return '<tr><td>' + esc(c.name) + '</td><td>' + esc(c.gstin) + '</td><td>' + esc(c.phone) + '</td><td>' + esc(c.email) + '</td><td><button class="small" data-ce="' + c.id + '">Edit</button> <button class="small" data-cd="' + c.id + '">Delete</button></td></tr>';
   }).join('');
 }
-$('custTable').addEventListener('click', function (e) {
-  var d = e.target.dataset;
-  if (d.ce) { var c = state.customers.filter(function (x) { return x.id === d.ce; })[0];
-    $('cId').value = c.id; $('cName').value = c.name; $('cGstin').value = c.gstin; $('cState').value = c.state; $('cPhone').value = c.phone; $('cEmail').value = c.email; $('cAddr').value = c.address; }
-  if (d.cd && confirm('Delete customer?')) run('deleteRecord', 'Customers', d.cd).then(loadAll);
-});
 $('saveCustomer').onclick = function () {
   run('saveCustomer', { id: val('cId'), name: val('cName'), gstin: val('cGstin'), state: val('cState'), phone: val('cPhone'), email: val('cEmail'), address: val('cAddr') })
     .then(function () { ['cId', 'cName', 'cGstin', 'cState', 'cPhone', 'cEmail', 'cAddr'].forEach(function (i) { $(i).value = ''; }); toast('Saved'); return loadAll(); });
