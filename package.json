@@ -1,0 +1,14 @@
+{
+  "name": "gst-billing-app",
+  "version": "1.0.0",
+  "description": "GST Billing web app — Google Apps Script",
+  "scripts": {
+    "login": "npx clasp login",
+    "push": "npx clasp push --force",
+    "open": "npx clasp open",
+    "version": "npx clasp version"
+  },
+  "devDependencies": {
+    "@google/clasp": "^3.4.1"
+  }
+}
