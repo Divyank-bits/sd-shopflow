@@ -3,7 +3,7 @@
 function doGet() {
   return HtmlService.createTemplateFromFile('Index')
     .evaluate()
-    .setTitle('GST Billing')
+    .setTitle('Shikwal Dresses Billing')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
