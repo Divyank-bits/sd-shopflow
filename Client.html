@@ -1,0 +1,139 @@
+<script>
+var $ = function (id) { return document.getElementById(id); };
+var state = { products: [], customers: [], cart: [], settings: {} };
+
+function run(fn) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  return new Promise(function (ok, bad) {
+    google.script.run.withSuccessHandler(ok).withFailureHandler(function (e) { toast(e.message || e); bad(e); })[fn].apply(null, args);
+  });
+}
+function toast(t) { var m = $('msg'); m.textContent = t; m.style.display = 'block'; setTimeout(function () { m.style.display = 'none'; }, 3500); }
+function esc(s) { return String(s === undefined || s === null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function val(id) { return $(id).value.trim(); }
+
+// ---- tabs
+$('nav').addEventListener('click', function (e) {
+  var t = e.target.dataset.tab; if (!t) return;
+  document.querySelectorAll('nav button').forEach(function (b) { b.classList.toggle('active', b === e.target); });
+  document.querySelectorAll('section').forEach(function (s) { s.classList.toggle('active', s.id === t); });
+  if (t === 'invoices') loadInvoices();
+});
+
+// ---- data load
+function loadAll() {
+  return Promise.all([run('listProducts'), run('listCustomers'), run('getSettings'), run('lowStockProducts')]).then(function (r) {
+    state.products = r[0]; state.customers = r[1]; state.settings = r[2];
+    $('shopTitle').textContent = state.settings.shopName || 'GST Billing';
+    $('billProduct').innerHTML = state.products.map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + ' (stock ' + p.stock + ')</option>'; }).join('');
+    $('billCustomer').innerHTML = '<option value="">Cash sale / walk-in</option>' + state.customers.map(function (c) { return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('');
+    $('lowStock').textContent = r[3].length ? 'Low stock: ' + r[3].map(function (p) { return p.name + ' (' + p.stock + ')'; }).join(', ') : '';
+    renderProducts(); renderCustomers(); renderSettings();
+  });
+}
+
+// ---- billing
+function renderCart() {
+  var tb = $('cart').querySelector('tbody'), total = 0;
+  tb.innerHTML = state.cart.map(function (c, i) {
+    var amt = c.qty * c.rate - c.discount; total += amt * (1 + c.gst / 100);
+    return '<tr><td>' + esc(c.name) + '</td><td class="r">' + c.qty + '</td><td class="r">' + c.rate + '</td><td class="r">' + c.gst + '</td><td class="r">' + amt.toFixed(2) + '</td><td><button class="small" data-rm="' + i + '">x</button></td></tr>';
+  }).join('');
+  $('billTotals').textContent = state.cart.length ? 'Approx. total incl. GST: Rs. ' + total.toFixed(2) + ' (exact amount computed on generate)' : '';
+}
+$('cart').addEventListener('click', function (e) { if (e.target.dataset.rm) { state.cart.splice(+e.target.dataset.rm, 1); renderCart(); } });
+$('addItem').onclick = function () {
+  var p = state.products.filter(function (x) { return x.id === $('billProduct').value; })[0];
+  var qty = parseFloat($('billQty').value);
+  if (!p || !(qty > 0)) return toast('Choose a product and quantity');
+  state.cart.push({ productId: p.id, name: p.name, qty: qty, rate: p.price, gst: p.gst, discount: parseFloat($('billDisc').value) || 0 });
+  $('billDisc').value = 0; renderCart();
+};
+$('generate').onclick = function () {
+  if (!state.cart.length) return toast('Cart is empty');
+  var btn = $('generate'); btn.disabled = true;
+  run('createInvoice', { customerId: $('billCustomer').value, placeOfSupply: val('billPos'),
+    items: state.cart.map(function (c) { return { productId: c.productId, qty: c.qty, rate: c.rate, discount: c.discount }; }) })
+    .then(function (inv) {
+      state.cart = []; renderCart();
+      $('billResult').innerHTML = 'Created <b>' + esc(inv.invoiceNo) + '</b> total Rs. ' + inv.total + ' &mdash; <a target="_blank" href="' + esc(inv.pdfUrl) + '">Open PDF</a> ' + shareButtons(inv.invoiceNo);
+      return loadAll();
+    }).catch(function () {}).then(function () { btn.disabled = false; });
+};
+function shareButtons(no) {
+  return '<button class="small" data-mail="' + esc(no) + '">Email</button> <button class="small" data-wa="' + esc(no) + '">WhatsApp</button>';
+}
+document.addEventListener('click', function (e) {
+  var d = e.target.dataset;
+  if (d.mail) run('emailInvoice', d.mail).then(toast);
+  if (d.wa) run('whatsappLink', d.wa).then(function (u) { window.open(u, '_blank'); });
+  if (d.cancel && confirm('Cancel ' + d.cancel + '? Stock will be restored.')) run('cancelInvoice', d.cancel).then(function () { toast('Cancelled'); loadInvoices(); loadAll(); });
+});
+
+// ---- invoices
+function loadInvoices() {
+  run('listInvoices', val('invSearch')).then(function (list) {
+    $('invTable').querySelector('tbody').innerHTML = list.map(function (i) {
+      return '<tr><td>' + esc(i.invoiceNo) + '</td><td>' + new Date(i.date).toLocaleDateString() + '</td><td>' + esc(i.customerName) + '</td><td class="r">' + i.total + '</td><td>' + esc(i.status) + '</td><td>' +
+        '<a target="_blank" href="' + esc(i.pdfUrl) + '">PDF</a> ' + shareButtons(i.invoiceNo) +
+        (i.status === 'Active' ? ' <button class="small" data-cancel="' + esc(i.invoiceNo) + '">Cancel</button>' : '') + '</td></tr>';
+    }).join('');
+  });
+}
+$('invSearch').oninput = loadInvoices;
+
+// ---- products
+function renderProducts() {
+  $('prodTable').querySelector('tbody').innerHTML = state.products.map(function (p) {
+    return '<tr><td>' + esc(p.name) + '</td><td>' + esc(p.hsn) + '</td><td class="r">' + p.price + '</td><td class="r">' + p.gst + '</td><td class="r">' + p.stock + '</td><td><button class="small" data-pe="' + p.id + '">Edit</button> <button class="small" data-pd="' + p.id + '">Delete</button></td></tr>';
+  }).join('');
+}
+$('prodTable').addEventListener('click', function (e) {
+  var d = e.target.dataset;
+  if (d.pe) { var p = state.products.filter(function (x) { return x.id === d.pe; })[0];
+    $('pId').value = p.id; $('pName').value = p.name; $('pHsn').value = p.hsn; $('pUnit').value = p.unit; $('pPrice').value = p.price; $('pGst').value = p.gst; $('pStock').value = p.stock; $('pLow').value = p.lowStock; }
+  if (d.pd && confirm('Delete product?')) run('deleteRecord', 'Products', d.pd).then(loadAll);
+});
+$('saveProduct').onclick = function () {
+  run('saveProduct', { id: val('pId'), name: val('pName'), hsn: val('pHsn'), unit: val('pUnit') || 'pcs', price: val('pPrice'), gst: val('pGst'), stock: val('pStock'), lowStock: val('pLow') })
+    .then(function () { ['pId', 'pName', 'pHsn', 'pUnit', 'pPrice', 'pGst', 'pStock', 'pLow'].forEach(function (i) { $(i).value = ''; }); toast('Saved'); return loadAll(); });
+};
+
+// ---- customers
+function renderCustomers() {
+  $('custTable').querySelector('tbody').innerHTML = state.customers.map(function (c) {
+    return '<tr><td>' + esc(c.name) + '</td><td>' + esc(c.gstin) + '</td><td>' + esc(c.phone) + '</td><td>' + esc(c.email) + '</td><td><button class="small" data-ce="' + c.id + '">Edit</button> <button class="small" data-cd="' + c.id + '">Delete</button></td></tr>';
+  }).join('');
+}
+$('custTable').addEventListener('click', function (e) {
+  var d = e.target.dataset;
+  if (d.ce) { var c = state.customers.filter(function (x) { return x.id === d.ce; })[0];
+    $('cId').value = c.id; $('cName').value = c.name; $('cGstin').value = c.gstin; $('cState').value = c.state; $('cPhone').value = c.phone; $('cEmail').value = c.email; $('cAddr').value = c.address; }
+  if (d.cd && confirm('Delete customer?')) run('deleteRecord', 'Customers', d.cd).then(loadAll);
+});
+$('saveCustomer').onclick = function () {
+  run('saveCustomer', { id: val('cId'), name: val('cName'), gstin: val('cGstin'), state: val('cState'), phone: val('cPhone'), email: val('cEmail'), address: val('cAddr') })
+    .then(function () { ['cId', 'cName', 'cGstin', 'cState', 'cPhone', 'cEmail', 'cAddr'].forEach(function (i) { $(i).value = ''; }); toast('Saved'); return loadAll(); });
+};
+
+// ---- reports
+$('repMonth').value = new Date().toISOString().slice(0, 7);
+$('runReport').onclick = function () {
+  run('salesSummary', val('repMonth')).then(function (t) {
+    $('repOut').textContent = 'Invoices: ' + t.count + '\nTaxable: ' + t.taxable + '\nCGST: ' + t.cgst + '\nSGST: ' + t.sgst + '\nIGST: ' + t.igst + '\nTotal: ' + t.total;
+  });
+};
+$('exportGstr').onclick = function () { run('exportGstr1', val('repMonth')).then(function (u) { window.open(u, '_blank'); }); };
+
+// ---- settings
+var SET_KEYS = ['shopName', 'address', 'gstin', 'stateCode', 'prefix', 'nextNo', 'bank', 'terms'];
+function renderSettings() {
+  $('setForm').innerHTML = SET_KEYS.map(function (k) { return '<label>' + k + '</label><input data-k="' + k + '" value="' + esc(state.settings[k]) + '">'; }).join('');
+}
+$('saveSettings').onclick = function () {
+  var o = {}; document.querySelectorAll('#setForm input').forEach(function (i) { o[i.dataset.k] = i.value; });
+  run('saveSettings', o).then(function () { toast('Saved'); return loadAll(); });
+};
+
+loadAll();
+</script>

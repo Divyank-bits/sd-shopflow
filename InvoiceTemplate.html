@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 11px; color: #111; }
+  h1 { font-size: 16px; margin: 0; }
+  table { width: 100%; border-collapse: collapse; }
+  .items th, .items td { border: 1px solid #444; padding: 4px; }
+  .items th { background: #eee; }
+  .r { text-align: right; }
+  .box { border: 1px solid #444; padding: 6px; }
+  .meta td { vertical-align: top; padding: 2px 4px; }
+</style>
+</head>
+<body>
+<? var s = d.s, inv = d.inv, c = d.customer; ?>
+<table><tr>
+  <td><h1><?= s.shopName ?></h1><?= s.address ?><br>GSTIN: <?= s.gstin ?></td>
+  <td class="r"><h1>TAX INVOICE</h1>No: <b><?= inv.invoiceNo ?></b><br>Date: <?= d.dateText ?></td>
+</tr></table>
+<br>
+<div class="box">
+  <b>Bill To:</b> <?= inv.customerName ?><br>
+  <? if (c.address) { ?><?= c.address ?><br><? } ?>
+  <? if (inv.customerGstin) { ?>GSTIN: <?= inv.customerGstin ?><br><? } ?>
+  Place of Supply (state code): <?= inv.placeOfSupply ?>
+</div>
+<br>
+<table class="items">
+  <tr>
+    <th>#</th><th>Item</th><th>HSN</th><th>Qty</th><th>Rate</th><th>Disc</th><th>Taxable</th>
+    <? if (d.inter) { ?><th>IGST</th><? } else { ?><th>CGST</th><th>SGST</th><? } ?>
+    <th>Total</th>
+  </tr>
+  <? d.items.forEach(function (it, i) { ?>
+  <tr>
+    <td><?= i + 1 ?></td><td><?= it.name ?></td><td><?= it.hsn ?></td>
+    <td class="r"><?= it.qty ?> <?= it.unit ?></td><td class="r"><?= it.rate ?></td>
+    <td class="r"><?= it.discount ?></td><td class="r"><?= it.taxable ?></td>
+    <? if (d.inter) { ?><td class="r"><?= it.igst ?> (<?= it.gst ?>%)</td>
+    <? } else { ?><td class="r"><?= it.cgst ?> (<?= it.gst / 2 ?>%)</td><td class="r"><?= it.sgst ?> (<?= it.gst / 2 ?>%)</td><? } ?>
+    <td class="r"><?= it.total ?></td>
+  </tr>
+  <? }); ?>
+</table>
+<br>
+<table><tr>
+  <td style="width:55%" class="box"><b>Amount in words:</b><br><?= d.words ?><br><br>
+    <? if (s.bank) { ?><b>Bank:</b> <?= s.bank ?><br><? } ?>
+  </td>
+  <td>
+    <table class="meta">
+      <tr><td>Taxable value</td><td class="r"><?= inv.taxable ?></td></tr>
+      <? if (d.inter) { ?><tr><td>IGST</td><td class="r"><?= inv.igst ?></td></tr>
+      <? } else { ?><tr><td>CGST</td><td class="r"><?= inv.cgst ?></td></tr><tr><td>SGST</td><td class="r"><?= inv.sgst ?></td></tr><? } ?>
+      <tr><td>Round off</td><td class="r"><?= inv.roundOff ?></td></tr>
+      <tr><td><b>Grand Total</b></td><td class="r"><b>Rs. <?= inv.total ?></b></td></tr>
+    </table>
+  </td>
+</tr></table>
+<br>
+<div><?= s.terms ?></div>
+<div class="r"><br><br>For <?= s.shopName ?><br><br>Authorised Signatory</div>
+</body>
+</html>

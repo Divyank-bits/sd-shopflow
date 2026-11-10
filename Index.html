@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <?!= include('Style') ?>
+</head>
+<body>
+<header id="shopTitle">GST Billing</header>
+<nav id="nav">
+  <button data-tab="bill" class="active">New Bill</button>
+  <button data-tab="invoices">Invoices</button>
+  <button data-tab="products">Products</button>
+  <button data-tab="customers">Customers</button>
+  <button data-tab="reports">Reports</button>
+  <button data-tab="settings">Settings</button>
+</nav>
+<main>
+  <section id="bill" class="active">
+    <div id="lowStock" class="warn"></div>
+    <div class="row">
+      <div><label>Customer</label><select id="billCustomer"></select></div>
+      <div><label>Place of supply (state code)</label><input id="billPos" placeholder="auto from customer"></div>
+    </div>
+    <div class="row">
+      <div style="flex:2 1 220px"><label>Product</label><select id="billProduct"></select></div>
+      <div><label>Qty</label><input id="billQty" type="number" value="1" min="0" step="any"></div>
+      <div><label>Discount (Rs)</label><input id="billDisc" type="number" value="0" min="0"></div>
+      <div style="align-self:end"><button class="primary" id="addItem">Add</button></div>
+    </div>
+    <table id="cart"><thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">GST%</th><th class="r">Amount</th><th></th></tr></thead><tbody></tbody></table>
+    <p id="billTotals"></p>
+    <button class="primary" id="generate">Generate Bill</button>
+    <div id="billResult"></div>
+  </section>
+
+  <section id="invoices">
+    <input id="invSearch" placeholder="Search invoice no or customer">
+    <table id="invTable"><thead><tr><th>No</th><th>Date</th><th>Customer</th><th class="r">Total</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
+  </section>
+
+  <section id="products">
+    <div class="row">
+      <input id="pName" placeholder="Name"><input id="pHsn" placeholder="HSN"><input id="pUnit" placeholder="Unit (pcs)">
+      <input id="pPrice" type="number" placeholder="Price"><input id="pGst" type="number" placeholder="GST %">
+      <input id="pStock" type="number" placeholder="Stock"><input id="pLow" type="number" placeholder="Low stock at">
+    </div>
+    <input type="hidden" id="pId">
+    <button class="primary" id="saveProduct">Save product</button>
+    <table id="prodTable"><thead><tr><th>Name</th><th>HSN</th><th class="r">Price</th><th class="r">GST%</th><th class="r">Stock</th><th></th></tr></thead><tbody></tbody></table>
+  </section>
+
+  <section id="customers">
+    <div class="row">
+      <input id="cName" placeholder="Name"><input id="cGstin" placeholder="GSTIN (optional)"><input id="cState" placeholder="State code (if no GSTIN)">
+      <input id="cPhone" placeholder="Phone"><input id="cEmail" placeholder="Email"><input id="cAddr" placeholder="Address">
+    </div>
+    <input type="hidden" id="cId">
+    <button class="primary" id="saveCustomer">Save customer</button>
+    <table id="custTable"><thead><tr><th>Name</th><th>GSTIN</th><th>Phone</th><th>Email</th><th></th></tr></thead><tbody></tbody></table>
+  </section>
+
+  <section id="reports">
+    <label>Month</label><input id="repMonth" type="month">
+    <button class="primary" id="runReport">Show summary</button>
+    <button class="primary" id="exportGstr">Export GSTR-1 sheet</button>
+    <pre id="repOut"></pre>
+  </section>
+
+  <section id="settings">
+    <div id="setForm"></div>
+    <button class="primary" id="saveSettings">Save settings</button>
+  </section>
+</main>
+<div id="msg"></div>
+<?!= include('Client') ?>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# Never push these to Apps Script
+.git/**
+.github/**
+node_modules/**
+.env
+*.md
+package.json
+package-lock.json

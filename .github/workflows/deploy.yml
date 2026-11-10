@@ -1,0 +1,43 @@
+name: Deploy to Google Apps Script
+
+on:
+  push:
+    branches:
+      - main   # change to master if that is your default branch
+
+jobs:
+  deploy:
+    name: Push with clasp
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the repo
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Install Node + clasp
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install clasp
+        run: npm install -g @google/clasp
+
+      # 3. Write clasp credentials from the GitHub secret
+      #    CLASP_TOKEN is the entire JSON string of your ~/.clasprc.json
+      - name: Write clasp credentials
+        run: echo '${{ secrets.CLASP_TOKEN }}' > ~/.clasprc.json
+
+      # 4. Push source to Apps Script
+      - name: Push to Apps Script
+        run: clasp push --force
+
+      # 5. (Optional) create a new deployment version on main branch
+      #    Comment this step out if you don't want auto-versioning.
+      - name: Create new version
+        run: |
+          VERSION_MSG="Deploy $(date -u '+%Y-%m-%d %H:%M') UTC - ${{ github.sha }}"
+          clasp version "$VERSION_MSG"
+        # Note: this creates a named version; to also update the live "HEAD"
+        # deployment you need to run `clasp deploy -i <deploymentId>` — see README.
