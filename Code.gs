@@ -19,13 +19,20 @@ function onOpen() {
     .addToUi();
 }
 
-/** Spreadsheet used as the database (the one this script is bound to, or stored id). */
+/** Spreadsheet used as the database. Creates one automatically if none exists. */
 function db_() {
   var props = PropertiesService.getScriptProperties();
   var id = props.getProperty('SHEET_ID');
-  if (id) return SpreadsheetApp.openById(id);
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  if (!ss) throw new Error('Run setup() first to create the database sheet.');
+  if (id) {
+    try { return SpreadsheetApp.openById(id); } catch(e) { props.deleteProperty('SHEET_ID'); }
+  }
+  // Try bound spreadsheet first
+  try {
+    var bound = SpreadsheetApp.getActiveSpreadsheet();
+    if (bound) { props.setProperty('SHEET_ID', bound.getId()); return bound; }
+  } catch(e) {}
+  // Standalone script — create a new spreadsheet in Drive
+  var ss = SpreadsheetApp.create('SD Shopflow — Database');
   props.setProperty('SHEET_ID', ss.getId());
   return ss;
 }
