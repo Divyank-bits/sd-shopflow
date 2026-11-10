@@ -78,7 +78,7 @@ document.addEventListener('click', function (e) {
   // customers
   if (d.ce) {
     var c = state.customers.filter(function (x) { return x.id === d.ce; })[0];
-    if (c) { $('cId').value = c.id; $('cName').value = c.name; $('cGstin').value = c.gstin || ''; $('cState').value = c.state || ''; $('cPhone').value = c.phone || ''; $('cEmail').value = c.email || ''; $('cAddr').value = c.address || ''; }
+    if (c) { $('cId').value = c.id; $('cName').value = c.name; $('cGstin').value = c.gstin || ''; $('cState').value = c.state || ''; $('cStateName').value = c.stateName || ''; $('cAgent').value = c.agent || ''; $('cPhone').value = c.phone || ''; $('cEmail').value = c.email || ''; $('cAddr').value = c.address || ''; }
   }
   if (d.cd && confirm('Delete customer?')) run('deleteRecord', 'Customers', d.cd).then(loadAll);
 });
@@ -113,8 +113,8 @@ function renderCustomers() {
   }).join('');
 }
 $('saveCustomer').onclick = function () {
-  run('saveCustomer', { id: val('cId'), name: val('cName'), gstin: val('cGstin'), state: val('cState'), phone: val('cPhone'), email: val('cEmail'), address: val('cAddr') })
-    .then(function () { ['cId', 'cName', 'cGstin', 'cState', 'cPhone', 'cEmail', 'cAddr'].forEach(function (i) { $(i).value = ''; }); toast('Saved'); return loadAll(); });
+  run('saveCustomer', { id: val('cId'), name: val('cName'), gstin: val('cGstin'), state: val('cState'), stateName: val('cStateName'), agent: val('cAgent'), phone: val('cPhone'), email: val('cEmail'), address: val('cAddr') })
+    .then(function () { ['cId','cName','cGstin','cState','cStateName','cAgent','cPhone','cEmail','cAddr'].forEach(function (i) { $(i).value = ''; }); toast('Saved'); return loadAll(); });
 };
 
 // ---- reports
@@ -127,7 +127,7 @@ $('runReport').onclick = function () {
 $('exportGstr').onclick = function () { run('exportGstr1', val('repMonth')).then(function (u) { window.open(u, '_blank'); }); };
 
 // ---- settings
-var SET_KEYS = ['shopName', 'address', 'gstin', 'stateCode', 'prefix', 'nextNo', 'bank', 'terms'];
+var SET_KEYS = ['shopName', 'address', 'phone', 'mobile', 'email', 'gstin', 'stateCode', 'prefix', 'nextNo', 'bank', 'accountNo', 'ifsc', 'transport', 'logoUrl', 'terms'];
 function renderSettings() {
   $('setForm').innerHTML = SET_KEYS.map(function (k) { return '<label>' + k + '</label><input data-k="' + k + '" value="' + esc(state.settings[k]) + '">'; }).join('');
 }

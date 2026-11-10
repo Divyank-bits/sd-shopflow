@@ -1,65 +1,239 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <style>
-  body { font-family: Arial, sans-serif; font-size: 11px; color: #111; }
-  h1 { font-size: 16px; margin: 0; }
-  table { width: 100%; border-collapse: collapse; }
-  .items th, .items td { border: 1px solid #444; padding: 4px; }
-  .items th { background: #eee; }
-  .r { text-align: right; }
-  .box { border: 1px solid #444; padding: 6px; }
-  .meta td { vertical-align: top; padding: 2px 4px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 10px; color: #000; padding: 10px; }
+  .outer { border: 2px solid #000; width: 100%; }
+
+  /* Header */
+  .shop-header { text-align: center; padding: 6px 4px 4px; border-bottom: 1px solid #000; }
+  .shop-name { font-size: 20px; font-weight: bold; color: #cc0000; letter-spacing: 1px; }
+  .shop-address { font-size: 10px; margin-top: 2px; }
+  .shop-contact { font-size: 10px; }
+  .shop-gstin-row { display: flex; justify-content: space-between; font-size: 10px; margin-top: 2px; }
+
+  /* Invoice title bar */
+  .inv-title-bar { text-align: center; background: #000; color: #fff; font-weight: bold; font-size: 11px; padding: 3px; }
+
+  /* 3-col info section */
+  .info-row { display: flex; border-bottom: 1px solid #000; }
+  .info-col { flex: 1; padding: 4px 6px; font-size: 10px; border-right: 1px solid #000; }
+  .info-col:last-child { border-right: none; }
+  .info-col-title { background: #ccc; font-weight: bold; text-align: center; padding: 2px; font-size: 10px; border-bottom: 1px solid #000; }
+  .info-line { display: flex; margin: 1px 0; }
+  .info-label { width: 75px; font-weight: bold; flex-shrink: 0; }
+  .info-val { flex: 1; }
+
+  /* Consignee section */
+  .consignee-row { display: flex; border-bottom: 1px solid #000; }
+  .consignee-left { flex: 1; border-right: 1px solid #000; }
+  .consignee-right { flex: 1; }
+  .section-title { background: #ccc; font-weight: bold; text-align: center; padding: 2px; font-size: 10px; border-bottom: 1px solid #000; }
+
+  /* Items table */
+  .items-table { width: 100%; border-collapse: collapse; }
+  .items-table th { background: #ccc; border: 1px solid #000; padding: 3px 4px; text-align: center; font-size: 10px; }
+  .items-table td { border: 1px solid #000; padding: 3px 4px; font-size: 10px; }
+  .items-table td.r { text-align: right; }
+  .items-table td.c { text-align: center; }
+
+  /* Bottom section */
+  .bottom-row { display: flex; border-top: 1px solid #000; }
+  .bottom-left { flex: 1; border-right: 1px solid #000; padding: 6px; }
+  .bottom-right { width: 220px; }
+  .total-row { display: flex; border-bottom: 1px solid #000; }
+  .total-label { flex: 1; padding: 3px 6px; font-size: 10px; border-right: 1px solid #000; }
+  .total-val { width: 80px; padding: 3px 6px; text-align: right; font-size: 10px; }
+  .total-row.bold .total-label, .total-row.bold .total-val { font-weight: bold; background: #eee; }
+
+  /* Bank + terms */
+  .bank-section { padding: 4px 6px; border-top: 1px solid #000; font-size: 9px; }
+  .terms-section { background: #eee; border-top: 1px solid #000; padding: 4px 6px; font-size: 9px; }
+  .terms-title { font-weight: bold; margin-bottom: 2px; }
+
+  /* Signature */
+  .sig-row { display: flex; border-top: 1px solid #000; }
+  .sig-col { flex: 1; text-align: center; padding: 4px; border-right: 1px solid #000; font-size: 10px; }
+  .sig-col:last-child { border-right: none; }
+  .sig-for { text-align: right; font-weight: bold; color: #cc0000; font-size: 11px; padding: 4px 6px; border-top: 1px solid #000; }
+
+  .logo-area { padding: 4px 6px; }
+  .dispatch-title { background: #ccc; font-weight: bold; text-align: center; padding: 2px; font-size: 10px; border-bottom: 1px solid #000; border-top: 1px solid #000; }
 </style>
 </head>
 <body>
-<? var s = d.s, inv = d.inv, c = d.customer; ?>
-<table><tr>
-  <td><h1><?= s.shopName ?></h1><?= s.address ?><br>GSTIN: <?= s.gstin ?></td>
-  <td class="r"><h1>TAX INVOICE</h1>No: <b><?= inv.invoiceNo ?></b><br>Date: <?= d.dateText ?></td>
-</tr></table>
-<br>
-<div class="box">
-  <b>Bill To:</b> <?= inv.customerName ?><br>
-  <? if (c.address) { ?><?= c.address ?><br><? } ?>
-  <? if (inv.customerGstin) { ?>GSTIN: <?= inv.customerGstin ?><br><? } ?>
-  Place of Supply (state code): <?= inv.placeOfSupply ?>
+<? var s = d.s, inv = d.inv, c = d.customer, items = d.items; ?>
+<div class="outer">
+
+  <!-- Shop Header -->
+  <div class="shop-header">
+    <div class="shop-name"><?= s.shopName || 'SIKHWAL DRESSES' ?></div>
+    <div class="shop-address"><?= s.address ?></div>
+    <div class="shop-contact">Contact: <?= s.phone || '' ?><?= s.mobile ? ' Mobile: ' + s.mobile : '' ?></div>
+    <div class="shop-gstin-row">
+      <span>GSTIN: <?= s.gstin ?></span>
+      <span>Mail Id: <?= s.email || '' ?></span>
+    </div>
+  </div>
+
+  <!-- Invoice Title -->
+  <div class="inv-title-bar">Readymade Sales Invoice</div>
+
+  <!-- Billed To / Invoice Details / Consignee (3 col) -->
+  <div class="info-row">
+    <!-- Billed To -->
+    <div class="info-col" style="flex:1.4">
+      <div class="info-col-title">Detail of Receiver (Billed to)</div>
+      <div class="info-line"><span class="info-label">Name</span><span class="info-val">: <?= inv.customerName ?></span></div>
+      <div class="info-line"><span class="info-label">Address</span><span class="info-val">: <?= c.address || '' ?></span></div>
+      <div class="info-line"><span class="info-label">GSTIN</span><span class="info-val">: <?= inv.customerGstin || '' ?></span></div>
+      <div class="info-line"><span class="info-label">State</span><span class="info-val">: <?= c.stateName || '' ?></span></div>
+      <div class="info-line"><span class="info-label">Agent</span><span class="info-val">: <?= c.agent || 'DIRECT' ?></span><span style="margin-left:8px">Code</span><span style="margin-left:4px"><?= inv.placeOfSupply ?></span></div>
+    </div>
+    <!-- Invoice Details -->
+    <div class="info-col" style="flex:1; border-left: 1px solid #000; border-right: 1px solid #000;">
+      <div style="height:16px"></div>
+      <div class="info-line"><span class="info-label">Invoice No</span><span class="info-val">: <?= inv.invoiceNo ?></span></div>
+      <div class="info-line"><span class="info-label">Invoice Date</span><span class="info-val">: <?= d.dateText ?></span></div>
+      <div class="info-line"><span class="info-label">Offer No.</span><span class="info-val">:</span></div>
+      <div class="info-line"><span class="info-label">Remark</span><span class="info-val">:</span></div>
+    </div>
+    <!-- Dispatch Detail -->
+    <div class="info-col" style="flex:1">
+      <div class="info-col-title">Dispatch Detail</div>
+      <div class="info-line"><span class="info-label">Transport</span><span class="info-val">: <?= s.transport || 'BY HAND' ?></span></div>
+      <div class="info-line"><span class="info-label">Despatch No</span><span class="info-val">:</span></div>
+      <div class="info-line"><span class="info-label">L.R. No.</span><span class="info-val">:</span></div>
+      <div class="info-line"><span class="info-label">Vehicle No.</span><span class="info-val">:</span></div>
+      <div class="info-line"><span class="info-label">E-Way Bill No.</span><span class="info-val">:</span></div>
+    </div>
+  </div>
+
+  <!-- Consignee -->
+  <div class="consignee-row">
+    <div class="consignee-left">
+      <div class="section-title">Detail of Consignee ( Shipped to )</div>
+      <div style="padding: 3px 6px;">
+        <div class="info-line"><span class="info-label">Name</span><span class="info-val">: <?= inv.customerName ?></span></div>
+        <div class="info-line"><span class="info-label">Address</span><span class="info-val">: <?= c.address || '' ?></span></div>
+        <div class="info-line"><span class="info-label">GSTIN</span><span class="info-val">: <?= inv.customerGstin || '' ?></span></div>
+        <div class="info-line"><span class="info-label">State</span><span class="info-val">: <?= c.stateName || '' ?></span><span style="margin-left:12px">Code</span><span style="margin-left:4px"><?= inv.placeOfSupply ?></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Items Table -->
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th style="width:35px">Bale No</th>
+        <th>Name of Product</th>
+        <th style="width:35px">GST</th>
+        <th style="width:40px">HSN</th>
+        <th style="width:40px">Size</th>
+        <th style="width:55px">Quantity</th>
+        <th style="width:55px">Rate</th>
+        <th style="width:65px">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <? items.forEach(function (it, i) { ?>
+      <tr>
+        <td class="c"><?= i + 1 ?></td>
+        <td><?= it.name ?></td>
+        <td class="c"><?= it.gst ? it.gst + '%' : '' ?></td>
+        <td class="c"><?= it.hsn || '' ?></td>
+        <td class="c"></td>
+        <td class="r"><?= it.qty ?></td>
+        <td class="r"><?= it.rate ?></td>
+        <td class="r"><?= it.taxable ?></td>
+      </tr>
+      <? } ?>
+      <!-- Empty rows for spacing -->
+      <? for (var i = items.length; i < 10; i++) { ?>
+      <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <? } ?>
+      <!-- Total row -->
+      <tr>
+        <td colspan="4" style="text-align:center; font-weight:bold;">Total ----------------&gt;</td>
+        <td></td>
+        <td class="r" style="font-weight:bold;"><?= items.reduce(function(s,i){return s+i.qty},0) ?></td>
+        <td></td>
+        <td class="r" style="font-weight:bold;"><?= inv.taxable ?></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Bottom: Logo + Totals -->
+  <div class="bottom-row">
+    <!-- Left: Logo + Bank -->
+    <div class="bottom-left">
+      <div class="logo-area">
+        <? if (s.logoUrl) { ?>
+        <img src="<?= s.logoUrl ?>" style="max-height:60px; max-width:160px;">
+        <? } else { ?>
+        <div style="font-size:28px; font-weight:900; color:#1a5c2a; font-style:italic; letter-spacing:-1px;">SWS</div>
+        <div style="font-size:11px; font-weight:bold; text-decoration:underline; letter-spacing:2px;">UNIFORM</div>
+        <? } ?>
+      </div>
+      <div class="bank-section">
+        <div><b>Bank Name</b> &nbsp; <?= s.bank || 'HDFC BANK' ?></div>
+        <div><b>A/c No</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <?= s.accountNo || '' ?></div>
+        <div><b>IFS Code</b> &nbsp;&nbsp;&nbsp; <?= s.ifsc || '' ?></div>
+      </div>
+    </div>
+
+    <!-- Right: Totals -->
+    <div class="bottom-right">
+      <div class="total-row bold">
+        <div class="total-label">TOTAL</div>
+        <div class="total-val">TOTAL AMOUNT</div>
+      </div>
+      <div class="total-row bold">
+        <div class="total-label"></div>
+        <div class="total-val"><?= inv.total ?></div>
+      </div>
+      <div class="total-row">
+        <div class="total-label">ADD</div>
+        <div class="total-val">CGST &nbsp; <?= inv.cgst || '' ?></div>
+      </div>
+      <div class="total-row">
+        <div class="total-label"></div>
+        <div class="total-val">SGST &nbsp; <?= inv.sgst || '' ?></div>
+      </div>
+      <? if (inv.igst) { ?>
+      <div class="total-row">
+        <div class="total-label"></div>
+        <div class="total-val">IGST &nbsp; <?= inv.igst ?></div>
+      </div>
+      <? } ?>
+      <div class="total-row bold">
+        <div class="total-label">Grand Total</div>
+        <div class="total-val">Rs. <?= inv.total ?></div>
+      </div>
+      <div style="padding:4px 6px; font-size:9px; border-top:1px solid #000;">
+        <i><?= d.words ?></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terms -->
+  <div class="terms-section">
+    <div class="terms-title">Terms &amp; Conditions</div>
+    <? var terms = (s.terms || '').split('\n'); terms.forEach(function(t,i){ if(t.trim()){ ?><div><?= (i+1) ?>- <?= t.trim() ?></div><? }}); ?>
+  </div>
+
+  <!-- Signature row -->
+  <div class="sig-for">For: <?= s.shopName || 'SIKHWAL DRESSES' ?></div>
+  <div class="sig-row">
+    <div class="sig-col">Prepared By</div>
+    <div class="sig-col">Checked By</div>
+    <div class="sig-col">E.&amp;O.E.</div>
+    <div class="sig-col">Authorised Signatory</div>
+  </div>
+
 </div>
-<br>
-<table class="items">
-  <tr>
-    <th>#</th><th>Item</th><th>HSN</th><th>Qty</th><th>Rate</th><th>Disc</th><th>Taxable</th>
-    <? if (d.inter) { ?><th>IGST</th><? } else { ?><th>CGST</th><th>SGST</th><? } ?>
-    <th>Total</th>
-  </tr>
-  <? d.items.forEach(function (it, i) { ?>
-  <tr>
-    <td><?= i + 1 ?></td><td><?= it.name ?></td><td><?= it.hsn ?></td>
-    <td class="r"><?= it.qty ?> <?= it.unit ?></td><td class="r"><?= it.rate ?></td>
-    <td class="r"><?= it.discount ?></td><td class="r"><?= it.taxable ?></td>
-    <? if (d.inter) { ?><td class="r"><?= it.igst ?> (<?= it.gst ?>%)</td>
-    <? } else { ?><td class="r"><?= it.cgst ?> (<?= it.gst / 2 ?>%)</td><td class="r"><?= it.sgst ?> (<?= it.gst / 2 ?>%)</td><? } ?>
-    <td class="r"><?= it.total ?></td>
-  </tr>
-  <? }); ?>
-</table>
-<br>
-<table><tr>
-  <td style="width:55%" class="box"><b>Amount in words:</b><br><?= d.words ?><br><br>
-    <? if (s.bank) { ?><b>Bank:</b> <?= s.bank ?><br><? } ?>
-  </td>
-  <td>
-    <table class="meta">
-      <tr><td>Taxable value</td><td class="r"><?= inv.taxable ?></td></tr>
-      <? if (d.inter) { ?><tr><td>IGST</td><td class="r"><?= inv.igst ?></td></tr>
-      <? } else { ?><tr><td>CGST</td><td class="r"><?= inv.cgst ?></td></tr><tr><td>SGST</td><td class="r"><?= inv.sgst ?></td></tr><? } ?>
-      <tr><td>Round off</td><td class="r"><?= inv.roundOff ?></td></tr>
-      <tr><td><b>Grand Total</b></td><td class="r"><b>Rs. <?= inv.total ?></b></td></tr>
-    </table>
-  </td>
-</tr></table>
-<br>
-<div><?= s.terms ?></div>
-<div class="r"><br><br>For <?= s.shopName ?><br><br>Authorised Signatory</div>
 </body>
 </html>

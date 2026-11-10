@@ -3,7 +3,7 @@
 var SCHEMA = {
   Settings: ['key', 'value'],
   Products: ['id', 'name', 'hsn', 'unit', 'price', 'gst', 'stock', 'lowStock'],
-  Customers: ['id', 'name', 'gstin', 'address', 'state', 'phone', 'email'],
+  Customers: ['id', 'name', 'gstin', 'address', 'state', 'stateName', 'phone', 'email', 'agent'],
   Invoices: ['invoiceNo', 'date', 'customerId', 'customerName', 'customerGstin', 'placeOfSupply',
              'taxable', 'cgst', 'sgst', 'igst', 'roundOff', 'total', 'pdfUrl', 'status'],
   InvoiceItems: ['invoiceNo', 'productId', 'name', 'hsn', 'qty', 'unit', 'rate', 'discount',
@@ -12,14 +12,21 @@ var SCHEMA = {
 };
 
 var DEFAULT_SETTINGS = {
-  shopName: 'My Shop',
-  address: 'Shop address',
-  gstin: '',
-  stateCode: '27',
-  prefix: 'INV',
+  shopName: 'SIKHWAL DRESSES',
+  address: '05-FIRST FLOOR, HINDURAJ TIRAHA, PANERIO KI MADRI, UDAIPUR',
+  phone: '9214973181',
+  mobile: '9414442691',
+  email: 'narendra22vyas@gmail.com',
+  gstin: '08AFCPV9963Q1Z7',
+  stateCode: '08',
+  prefix: 'SL',
   nextNo: 1,
-  bank: '',
-  terms: 'Goods once sold will not be taken back.',
+  bank: 'HDFC BANK',
+  accountNo: '',
+  ifsc: 'HDFC0005259',
+  transport: 'BY HAND',
+  logoUrl: '',
+  terms: 'Payment within days from bill date.\nAfter Due Date Interest Will Be Charged @21% Rs. 4.00 PER DAY.\nPayment should be made by A/c pay Chq/DD/Net Banking only.\nGoods once sold will not be taken back.\nAll disputes subject to BHILWARA jurisdiction only.',
   folderId: ''
 };
 
